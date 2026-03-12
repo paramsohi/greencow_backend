@@ -1,0 +1,103 @@
+{
+  "info": {
+    "name": "BackendCow APIs",
+    "description": "Dairy backend API collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "userId", "value": "1" },
+    { "key": "customerId", "value": "1" },
+    { "key": "saleId", "value": "1" },
+    { "key": "paymentId", "value": "1" },
+    { "key": "expenseId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/signup",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@dairy.local\",\n  \"password\": \"Password@123\",\n  \"fullName\": \"Dairy Owner\",\n  \"phone\": \"+1000000000\",\n  \"businessName\": \"Happy Cows Dairy\",\n  \"businessAddress\": \"Main Market Road\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@dairy.local\",\n  \"password\": \"Password@123\"\n}"
+            }
+          }
+        },
+        { "name": "Logout", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/auth/logout", "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" } } },
+        { "name": "Refresh Token", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/auth/refresh-token", "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" } } },
+        { "name": "Me", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/auth/me" } }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        { "name": "Get User", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/users/{{userId}}" } },
+        { "name": "Update User", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/users/{{userId}}", "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Updated Name\"\n}" } } }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        { "name": "Create Customer", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/users/{{userId}}/customers", "body": { "mode": "raw", "raw": "{\n  \"name\": \"Retail Shop\",\n  \"phone\": \"+1000000009\",\n  \"address\": \"City Center\",\n  \"openingBalance\": 300\n}" } } },
+        { "name": "List Customers", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/users/{{userId}}/customers?page=1&limit=20" } },
+        { "name": "Get Customer", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/customers/{{customerId}}" } },
+        { "name": "Update Customer", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/customers/{{customerId}}", "body": { "mode": "raw", "raw": "{\n  \"phone\": \"+1000000010\"\n}" } } },
+        { "name": "Delete Customer", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/customers/{{customerId}}" } }
+      ]
+    },
+    {
+      "name": "Sales",
+      "item": [
+        { "name": "Create Sale", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/users/{{userId}}/sales", "body": { "mode": "raw", "raw": "{\n  \"customerId\": 1,\n  \"saleDate\": \"2026-03-09T09:00:00.000Z\",\n  \"productType\": \"Cow Milk\",\n  \"quantityLiters\": 20,\n  \"ratePerLiter\": 60\n}" } } },
+        { "name": "List Sales", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/users/{{userId}}/sales?page=1&limit=20" } },
+        { "name": "Update Sale", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/sales/{{saleId}}", "body": { "mode": "raw", "raw": "{\n  \"quantityLiters\": 22,\n  \"ratePerLiter\": 62\n}" } } },
+        { "name": "Delete Sale", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/sales/{{saleId}}" } }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        { "name": "Create Payment", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/users/{{userId}}/payments", "body": { "mode": "raw", "raw": "{\n  \"customerId\": 1,\n  \"paymentDate\": \"2026-03-09T11:00:00.000Z\",\n  \"amount\": 1200,\n  \"paymentMethod\": \"cash\"\n}" } } },
+        { "name": "List Payments", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/users/{{userId}}/payments?page=1&limit=20" } },
+        { "name": "Update Payment", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/payments/{{paymentId}}", "body": { "mode": "raw", "raw": "{\n  \"amount\": 1400\n}" } } },
+        { "name": "Delete Payment", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/payments/{{paymentId}}" } }
+      ]
+    },
+    {
+      "name": "Expenses",
+      "item": [
+        { "name": "Create Expense", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/users/{{userId}}/expenses", "body": { "mode": "raw", "raw": "{\n  \"expenseDate\": \"2026-03-09T07:00:00.000Z\",\n  \"category\": \"Feed\",\n  \"amount\": 450\n}" } } },
+        { "name": "List Expenses", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/users/{{userId}}/expenses?page=1&limit=20" } },
+        { "name": "Update Expense", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/expenses/{{expenseId}}", "body": { "mode": "raw", "raw": "{\n  \"amount\": 500\n}" } } },
+        { "name": "Delete Expense", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/expenses/{{expenseId}}" } }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        { "name": "Daily Sales Summary", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/users/{{userId}}/reports/daily-sales-summary?date=2026-03-09" } },
+        { "name": "Monthly Summary", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/users/{{userId}}/reports/monthly-summary?month=2026-03" } },
+        { "name": "Customer Ledger", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/users/{{userId}}/reports/customer-ledger/{{customerId}}?fromDate=2026-03-01T00:00:00.000Z&toDate=2026-03-31T23:59:59.000Z" } }
+      ]
+    }
+  ]
+}
