@@ -7,7 +7,16 @@ import {
   verifyRefreshToken,
 } from '../../../common/utils/tokens';
 import { authRepository } from '../repositories/auth.repository';
-import { AuthResponseDto } from '../dto/auth.dto';
+import { AuthResponseDto, OtpRequestResponseDto } from '../dto/auth.dto';
+
+const STATIC_OTP = '1111';
+
+const normalizePhone = (phone: string): string => phone.trim();
+
+const buildPhoneFallbackEmail = (phone: string): string => {
+  const safePhone = phone.replace(/\s+/g, '');
+  return `phone_${safePhone}@phone.local`;
+};
 
 const toAuthResponse = (
   user: {
@@ -33,6 +42,47 @@ const toAuthResponse = (
 });
 
 export class AuthService {
+  async requestPhoneOtp(phone: string): Promise<OtpRequestResponseDto> {
+    const normalizedPhone = normalizePhone(phone);
+
+    return {
+      phone: normalizedPhone,
+      otp: STATIC_OTP,
+      expiresInSeconds: 300,
+    };
+  }
+
+  async verifyPhoneOtp(input: { phone: string; otp: string }): Promise<AuthResponseDto> {
+    const normalizedPhone = normalizePhone(input.phone);
+
+    if (input.otp !== STATIC_OTP) {
+      throw new ApiError(401, 'Invalid OTP');
+    }
+
+    let user = await authRepository.findByPhone(normalizedPhone);
+    if (!user) {
+      user = await authRepository.createUser({
+        email: buildPhoneFallbackEmail(normalizedPhone),
+        passwordHash: await hashPassword(`otp:${normalizedPhone}`),
+        profile: {
+          create: {
+            fullName: 'Phone User',
+            phone: normalizedPhone,
+          },
+        },
+      });
+    }
+
+    const payload: JwtPayload = { userId: user.id, email: user.email, role: user.role };
+    const accessToken = signAccessToken(payload);
+    const refreshToken = signRefreshToken(payload);
+
+    const decoded = verifyRefreshToken(refreshToken) as JwtPayload & { exp: number };
+    await authRepository.saveRefreshToken(user.id, sha256(refreshToken), new Date(decoded.exp * 1000));
+
+    return toAuthResponse(user, { accessToken, refreshToken });
+  }
+
   async signup(input: {
     email: string;
     password: string;
@@ -112,7 +162,11 @@ export class AuthService {
     };
   }
 
-  async logout(refreshToken: string) {
+  async logout(refreshToken?: string) {
+    if (!refreshToken) {
+      return;
+    }
+
     await authRepository.revokeToken(sha256(refreshToken));
   }
 

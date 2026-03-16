@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.me = exports.logout = exports.refreshToken = exports.login = exports.signup = void 0;
+exports.me = exports.logout = exports.refreshToken = exports.verifyPhoneOtp = exports.requestPhoneOtp = exports.login = exports.signup = void 0;
 const async_handler_1 = require("../../../common/middleware/async-handler");
 const auth_service_1 = require("../services/auth.service");
 exports.signup = (0, async_handler_1.asyncHandler)(async (req, res) => {
@@ -10,6 +10,14 @@ exports.signup = (0, async_handler_1.asyncHandler)(async (req, res) => {
 exports.login = (0, async_handler_1.asyncHandler)(async (req, res) => {
     const data = await auth_service_1.authService.login(req.body);
     res.status(200).json({ success: true, message: 'Login successful', data });
+});
+exports.requestPhoneOtp = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await auth_service_1.authService.requestPhoneOtp(req.body.phone);
+    res.status(200).json({ success: true, message: 'OTP sent successfully', data });
+});
+exports.verifyPhoneOtp = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await auth_service_1.authService.verifyPhoneOtp(req.body);
+    res.status(200).json({ success: true, message: 'Phone verification successful', data });
 });
 exports.refreshToken = (0, async_handler_1.asyncHandler)(async (req, res) => {
     const data = await auth_service_1.authService.refresh(req.body.refreshToken);

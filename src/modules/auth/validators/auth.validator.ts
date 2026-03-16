@@ -22,6 +22,30 @@ export const loginSchema = z.object({
   query: z.object({}),
 });
 
+const phoneSchema = z
+  .string()
+  .trim()
+  .min(8, 'Phone must be at least 8 characters')
+  .max(20, 'Phone cannot exceed 20 characters')
+  .regex(/^[+]?\d+$/, 'Phone must contain only digits and optional leading +');
+
+export const requestPhoneOtpSchema = z.object({
+  body: z.object({
+    phone: phoneSchema,
+  }),
+  params: z.object({}),
+  query: z.object({}),
+});
+
+export const verifyPhoneOtpSchema = z.object({
+  body: z.object({
+    phone: phoneSchema,
+    otp: z.string().trim().min(4).max(8),
+  }),
+  params: z.object({}),
+  query: z.object({}),
+});
+
 export const refreshSchema = z.object({
   body: z.object({
     refreshToken: z.string().min(20),
@@ -30,4 +54,10 @@ export const refreshSchema = z.object({
   query: z.object({}),
 });
 
-export const logoutSchema = refreshSchema;
+export const logoutSchema = z.object({
+  body: z.object({
+    refreshToken: z.string().trim().min(1).optional(),
+  }),
+  params: z.object({}),
+  query: z.object({}),
+});

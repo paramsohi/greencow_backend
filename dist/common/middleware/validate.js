@@ -5,9 +5,9 @@ const api_error_1 = require("../errors/api-error");
 const validate = (schema) => {
     return (req, _res, next) => {
         const result = schema.safeParse({
-            body: req.body,
-            params: req.params,
-            query: req.query,
+            body: req.body ?? {},
+            params: req.params ?? {},
+            query: req.query ?? {},
         });
         if (!result.success) {
             return next(new api_error_1.ApiError(400, 'Validation failed', result.error.flatten()));

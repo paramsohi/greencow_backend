@@ -5,6 +5,12 @@ const api_error_1 = require("../../../common/errors/api-error");
 const crypto_1 = require("../../../common/utils/crypto");
 const tokens_1 = require("../../../common/utils/tokens");
 const auth_repository_1 = require("../repositories/auth.repository");
+const STATIC_OTP = '1111';
+const normalizePhone = (phone) => phone.trim();
+const buildPhoneFallbackEmail = (phone) => {
+    const safePhone = phone.replace(/\s+/g, '');
+    return `phone_${safePhone}@phone.local`;
+};
 const toAuthResponse = (user, tokens) => ({
     user: {
         id: user.id,
@@ -15,6 +21,39 @@ const toAuthResponse = (user, tokens) => ({
     tokens,
 });
 class AuthService {
+    async requestPhoneOtp(phone) {
+        const normalizedPhone = normalizePhone(phone);
+        return {
+            phone: normalizedPhone,
+            otp: STATIC_OTP,
+            expiresInSeconds: 300,
+        };
+    }
+    async verifyPhoneOtp(input) {
+        const normalizedPhone = normalizePhone(input.phone);
+        if (input.otp !== STATIC_OTP) {
+            throw new api_error_1.ApiError(401, 'Invalid OTP');
+        }
+        let user = await auth_repository_1.authRepository.findByPhone(normalizedPhone);
+        if (!user) {
+            user = await auth_repository_1.authRepository.createUser({
+                email: buildPhoneFallbackEmail(normalizedPhone),
+                passwordHash: await (0, crypto_1.hashPassword)(`otp:${normalizedPhone}`),
+                profile: {
+                    create: {
+                        fullName: 'Phone User',
+                        phone: normalizedPhone,
+                    },
+                },
+            });
+        }
+        const payload = { userId: user.id, email: user.email, role: user.role };
+        const accessToken = (0, tokens_1.signAccessToken)(payload);
+        const refreshToken = (0, tokens_1.signRefreshToken)(payload);
+        const decoded = (0, tokens_1.verifyRefreshToken)(refreshToken);
+        await auth_repository_1.authRepository.saveRefreshToken(user.id, (0, crypto_1.sha256)(refreshToken), new Date(decoded.exp * 1000));
+        return toAuthResponse(user, { accessToken, refreshToken });
+    }
     async signup(input) {
         const existing = await auth_repository_1.authRepository.findByEmail(input.email);
         if (existing) {
@@ -74,6 +113,9 @@ class AuthService {
         };
     }
     async logout(refreshToken) {
+        if (!refreshToken) {
+            return;
+        }
         await auth_repository_1.authRepository.revokeToken((0, crypto_1.sha256)(refreshToken));
     }
     async me(userId) {

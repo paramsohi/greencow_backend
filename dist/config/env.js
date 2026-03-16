@@ -9,7 +9,7 @@ const zod_1 = require("zod");
 dotenv_1.default.config();
 const envSchema = zod_1.z.object({
     NODE_ENV: zod_1.z.enum(['development', 'test', 'production']).default('development'),
-    PORT: zod_1.z.coerce.number().default(4000),
+    PORT: zod_1.z.coerce.number().default(8080),
     DATABASE_URL: zod_1.z.string().min(1),
     JWT_ACCESS_SECRET: zod_1.z.string().min(16),
     JWT_REFRESH_SECRET: zod_1.z.string().min(16),

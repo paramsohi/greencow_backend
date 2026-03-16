@@ -12,6 +12,16 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json({ success: true, message: 'Login successful', data });
 });
 
+export const requestPhoneOtp = asyncHandler(async (req: Request, res: Response) => {
+  const data = await authService.requestPhoneOtp(req.body.phone);
+  res.status(200).json({ success: true, message: 'OTP sent successfully', data });
+});
+
+export const verifyPhoneOtp = asyncHandler(async (req: Request, res: Response) => {
+  const data = await authService.verifyPhoneOtp(req.body);
+  res.status(200).json({ success: true, message: 'Phone verification successful', data });
+});
+
 export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
   const data = await authService.refresh(req.body.refreshToken);
   res.status(200).json({ success: true, message: 'Token refreshed', data });

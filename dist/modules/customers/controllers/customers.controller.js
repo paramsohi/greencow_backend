@@ -4,12 +4,12 @@ exports.deleteCustomer = exports.updateCustomer = exports.getCustomer = exports.
 const async_handler_1 = require("../../../common/middleware/async-handler");
 const customers_service_1 = require("../services/customers.service");
 exports.createCustomer = (0, async_handler_1.asyncHandler)(async (req, res) => {
-    const userId = Number(req.params.userId);
+    const userId = req.auth.userId;
     const data = await customers_service_1.customersService.create(userId, req.body);
     res.status(201).json({ success: true, message: 'Customer created', data });
 });
 exports.listCustomers = (0, async_handler_1.asyncHandler)(async (req, res) => {
-    const userId = Number(req.params.userId);
+    const userId = req.auth.userId;
     const result = await customers_service_1.customersService.list(userId, req.query);
     res.status(200).json({ success: true, message: 'Customers fetched', data: result.items, meta: result.meta });
 });

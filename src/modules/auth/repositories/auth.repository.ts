@@ -25,6 +25,18 @@ export class AuthRepository {
     });
   }
 
+  findByPhone(phone: string) {
+    return prisma.user.findFirst({
+      where: {
+        deletedAt: null,
+        profile: {
+          phone,
+        },
+      },
+      include: { profile: true },
+    });
+  }
+
   async saveRefreshToken(userId: number, tokenHash: string, expiresAt: Date) {
     return prisma.refreshToken.create({
       data: { userId, tokenHash, expiresAt },

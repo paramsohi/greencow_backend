@@ -19,3 +19,9 @@ export interface AuthResponseDto {
   user: AuthUserDto;
   tokens: AuthTokensDto;
 }
+
+export interface OtpRequestResponseDto {
+  phone: string;
+  otp: string;
+  expiresInSeconds: number;
+}

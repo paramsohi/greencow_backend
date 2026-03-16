@@ -24,6 +24,17 @@ class AuthRepository {
             include: { profile: true },
         });
     }
+    findByPhone(phone) {
+        return prisma_1.prisma.user.findFirst({
+            where: {
+                deletedAt: null,
+                profile: {
+                    phone,
+                },
+            },
+            include: { profile: true },
+        });
+    }
     async saveRefreshToken(userId, tokenHash, expiresAt) {
         return prisma_1.prisma.refreshToken.create({
             data: { userId, tokenHash, expiresAt },
