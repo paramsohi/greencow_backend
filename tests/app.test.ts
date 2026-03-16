@@ -16,4 +16,11 @@ describe('App health', () => {
     expect(response.status).toBe(404);
     expect(response.body.success).toBe(false);
   });
+
+  it('should match phone OTP request route under /api/auth', async () => {
+    const response = await request(app).post('/api/auth/phone/request-otp').send({});
+
+    expect(response.status).not.toBe(404);
+    expect(response.body.success).toBe(false);
+  });
 });
