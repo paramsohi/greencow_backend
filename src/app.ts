@@ -28,7 +28,9 @@ app.use(sanitizeBody);
 app.get('/health', (_req, res) => {
   res.json({ success: true, message: 'ok' });
 });
-
+app.get('/', (_req, res) => {
+  res.send('Backend running 🚀');
+});
 app.use('/api', apiRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
