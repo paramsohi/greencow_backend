@@ -27,8 +27,10 @@ const startServer = async () => {
   try {
     await ensureDatabaseConnection();
 
-    app.listen(env.PORT, '0.0.0.0', () => {
-      logger.info(`Server listening on port ${env.PORT}`);
+    const PORT = Number(process.env.PORT) || env.PORT || 4000;
+
+    app.listen(PORT, '0.0.0.0', () => {
+      logger.info(`Server listening on port ${PORT}`);
     });
   } catch (error) {
     logger.error({ err: error }, 'Failed to start server due to database connectivity issue');
