@@ -27,7 +27,7 @@ const startServer = async () => {
   try {
     await ensureDatabaseConnection();
 
-    const PORT = Number(process.env.PORT) || env.PORT || 4000;
+    const PORT = Number(process.env.PORT) || env.PORT || 8080;
 
     app.listen(PORT, '0.0.0.0', () => {
       logger.info(`Server listening on port ${PORT}`);
