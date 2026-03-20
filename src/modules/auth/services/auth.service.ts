@@ -9,7 +9,7 @@ import {
 import { authRepository } from '../repositories/auth.repository';
 import { AuthResponseDto, OtpRequestResponseDto } from '../dto/auth.dto';
 
-const STATIC_OTP = '1111';
+const STATIC_OTP = '111111'; // For demo purposes only. In production, use a proper OTP generation and delivery mechanism.
 
 const normalizePhone = (phone: string): string => phone.trim();
 

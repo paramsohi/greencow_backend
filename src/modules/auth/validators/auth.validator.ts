@@ -40,7 +40,7 @@ export const requestPhoneOtpSchema = z.object({
 export const verifyPhoneOtpSchema = z.object({
   body: z.object({
     phone: phoneSchema,
-    otp: z.string().trim().min(4).max(8),
+    otp: z.string().trim().min(6, 'OTP must be at least 6 characters').max(6, 'OTP cannot exceed 6 characters'),
   }),
   params: z.object({}),
   query: z.object({}),
