@@ -5,6 +5,14 @@ import { paymentsRepository } from '../repositories/payments.repository';
 const toPaymentResponse = <TPayment extends { amount: unknown }>(payment: TPayment) => ({
   ...payment,
   amount: Number(payment.amount),
+  ...(payment && typeof payment === 'object' && 'customer' in payment && payment.customer
+    ? {
+        customer: {
+          ...(payment.customer as Record<string, unknown>),
+          openingBalance: Number((payment.customer as { openingBalance: unknown }).openingBalance),
+        },
+      }
+    : {}),
 });
 
 export class PaymentsService {

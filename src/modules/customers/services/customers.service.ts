@@ -2,9 +2,15 @@ import { ApiError } from '../../../common/errors/api-error';
 import { parsePagination } from '../../../common/utils/pagination';
 import { customersRepository } from '../repositories/customers.repository';
 
+const toCustomerResponse = <TCustomer extends { openingBalance: unknown }>(customer: TCustomer) => ({
+  ...customer,
+  openingBalance: Number(customer.openingBalance),
+});
+
 export class CustomersService {
   async create(userId: number, body: { name: string; phone?: string; address?: string; openingBalance?: number }) {
-    return customersRepository.create(userId, body);
+    const customer = await customersRepository.create(userId, body);
+    return toCustomerResponse(customer);
   }
 
   async list(userId: number, query: Record<string, unknown>) {
@@ -26,7 +32,7 @@ export class CustomersService {
     ]);
 
     return {
-      items,
+      items: items.map(toCustomerResponse),
       meta: {
         page,
         limit,
@@ -42,18 +48,20 @@ export class CustomersService {
       throw new ApiError(404, 'Customer not found');
     }
 
-    return item;
+    return toCustomerResponse(item);
   }
 
   async update(customerId: number, authUserId: number, body: { name?: string; phone?: string; address?: string; openingBalance?: number }) {
     const current = await this.getById(customerId, authUserId);
 
-    return customersRepository.update(current.id, {
+    const customer = await customersRepository.update(current.id, {
       ...(body.name !== undefined ? { name: body.name } : {}),
       ...(body.phone !== undefined ? { phone: body.phone } : {}),
       ...(body.address !== undefined ? { address: body.address } : {}),
       ...(body.openingBalance !== undefined ? { openingBalance: body.openingBalance } : {}),
     });
+
+    return toCustomerResponse(customer);
   }
 
   async remove(customerId: number, authUserId: number) {

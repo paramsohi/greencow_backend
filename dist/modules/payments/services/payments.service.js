@@ -7,6 +7,14 @@ const payments_repository_1 = require("../repositories/payments.repository");
 const toPaymentResponse = (payment) => ({
     ...payment,
     amount: Number(payment.amount),
+    ...(payment && typeof payment === 'object' && 'customer' in payment && payment.customer
+        ? {
+            customer: {
+                ...payment.customer,
+                openingBalance: Number(payment.customer.openingBalance),
+            },
+        }
+        : {}),
 });
 class PaymentsService {
     async create(userId, body) {

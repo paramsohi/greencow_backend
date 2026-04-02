@@ -4,6 +4,20 @@ exports.salesService = exports.SalesService = void 0;
 const api_error_1 = require("../../../common/errors/api-error");
 const pagination_1 = require("../../../common/utils/pagination");
 const sales_repository_1 = require("../repositories/sales.repository");
+const toSaleResponse = (sale) => ({
+    ...sale,
+    quantityLiters: Number(sale.quantityLiters),
+    ratePerLiter: Number(sale.ratePerLiter),
+    totalAmount: Number(sale.totalAmount),
+    ...(sale && typeof sale === 'object' && 'customer' in sale && sale.customer
+        ? {
+            customer: {
+                ...sale.customer,
+                openingBalance: Number(sale.customer.openingBalance),
+            },
+        }
+        : {}),
+});
 class SalesService {
     create(userId, body) {
         return sales_repository_1.salesRepository.create(userId, {
@@ -30,7 +44,7 @@ class SalesService {
             sales_repository_1.salesRepository.count(userId, where),
         ]);
         return {
-            items,
+            items: items.map(toSaleResponse),
             meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
         };
     }
@@ -45,7 +59,7 @@ class SalesService {
         const existing = await this.getOwnedSale(saleId, authUserId);
         const quantity = body.quantityLiters ?? Number(existing.quantityLiters);
         const rate = body.ratePerLiter ?? Number(existing.ratePerLiter);
-        return sales_repository_1.salesRepository.update(saleId, {
+        const sale = await sales_repository_1.salesRepository.update(saleId, {
             ...(body.customerId !== undefined ? { customerId: body.customerId } : {}),
             ...(body.saleDate ? { saleDate: new Date(body.saleDate) } : {}),
             ...(body.productType ? { productType: body.productType } : {}),
@@ -54,6 +68,7 @@ class SalesService {
             ...(body.notes !== undefined ? { notes: body.notes } : {}),
             totalAmount: quantity * rate,
         });
+        return toSaleResponse(sale);
     }
     async remove(saleId, authUserId) {
         await this.getOwnedSale(saleId, authUserId);

@@ -2,6 +2,21 @@ import { ApiError } from '../../../common/errors/api-error';
 import { parsePagination } from '../../../common/utils/pagination';
 import { salesRepository } from '../repositories/sales.repository';
 
+const toSaleResponse = <TSale extends { totalAmount: unknown; quantityLiters: unknown; ratePerLiter: unknown }>(sale: TSale) => ({
+  ...sale,
+  quantityLiters: Number(sale.quantityLiters),
+  ratePerLiter: Number(sale.ratePerLiter),
+  totalAmount: Number(sale.totalAmount),
+  ...(sale && typeof sale === 'object' && 'customer' in sale && sale.customer
+    ? {
+        customer: {
+          ...(sale.customer as Record<string, unknown>),
+          openingBalance: Number((sale.customer as { openingBalance: unknown }).openingBalance),
+        },
+      }
+    : {}),
+});
+
 export class SalesService {
   create(userId: number, body: {
     customerId?: number;
@@ -39,7 +54,7 @@ export class SalesService {
     ]);
 
     return {
-      items,
+      items: items.map(toSaleResponse),
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
@@ -65,7 +80,7 @@ export class SalesService {
     const quantity = body.quantityLiters ?? Number(existing.quantityLiters);
     const rate = body.ratePerLiter ?? Number(existing.ratePerLiter);
 
-    return salesRepository.update(saleId, {
+    const sale = await salesRepository.update(saleId, {
       ...(body.customerId !== undefined ? { customerId: body.customerId } : {}),
       ...(body.saleDate ? { saleDate: new Date(body.saleDate) } : {}),
       ...(body.productType ? { productType: body.productType } : {}),
@@ -74,6 +89,8 @@ export class SalesService {
       ...(body.notes !== undefined ? { notes: body.notes } : {}),
       totalAmount: quantity * rate,
     });
+
+    return toSaleResponse(sale);
   }
 
   async remove(saleId: number, authUserId: number) {

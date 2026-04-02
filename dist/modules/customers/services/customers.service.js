@@ -4,9 +4,14 @@ exports.customersService = exports.CustomersService = void 0;
 const api_error_1 = require("../../../common/errors/api-error");
 const pagination_1 = require("../../../common/utils/pagination");
 const customers_repository_1 = require("../repositories/customers.repository");
+const toCustomerResponse = (customer) => ({
+    ...customer,
+    openingBalance: Number(customer.openingBalance),
+});
 class CustomersService {
     async create(userId, body) {
-        return customers_repository_1.customersRepository.create(userId, body);
+        const customer = await customers_repository_1.customersRepository.create(userId, body);
+        return toCustomerResponse(customer);
     }
     async list(userId, query) {
         const { page, limit, skip, sortBy, sortOrder } = (0, pagination_1.parsePagination)({ query });
@@ -24,7 +29,7 @@ class CustomersService {
             customers_repository_1.customersRepository.count(userId, where),
         ]);
         return {
-            items,
+            items: items.map(toCustomerResponse),
             meta: {
                 page,
                 limit,
@@ -38,16 +43,17 @@ class CustomersService {
         if (!item || item.userId !== authUserId) {
             throw new api_error_1.ApiError(404, 'Customer not found');
         }
-        return item;
+        return toCustomerResponse(item);
     }
     async update(customerId, authUserId, body) {
         const current = await this.getById(customerId, authUserId);
-        return customers_repository_1.customersRepository.update(current.id, {
+        const customer = await customers_repository_1.customersRepository.update(current.id, {
             ...(body.name !== undefined ? { name: body.name } : {}),
             ...(body.phone !== undefined ? { phone: body.phone } : {}),
             ...(body.address !== undefined ? { address: body.address } : {}),
             ...(body.openingBalance !== undefined ? { openingBalance: body.openingBalance } : {}),
         });
+        return toCustomerResponse(customer);
     }
     async remove(customerId, authUserId) {
         const current = await this.getById(customerId, authUserId);
