@@ -119,6 +119,7 @@ const buildQuery = () => {
   const params = new URLSearchParams({
     page: String(state.page),
     limit: String(state.limit),
+    excludeAdmin: 'true',
   });
 
   if (state.method) {
@@ -165,6 +166,10 @@ document.getElementById('apply-filters').addEventListener('click', () => {
   state.status = document.getElementById('status-filter').value;
   state.url = document.getElementById('url-filter').value.trim();
   state.limit = Number(document.getElementById('limit-filter').value);
+  void loadLogs();
+});
+
+document.getElementById('refresh-logs').addEventListener('click', () => {
   void loadLogs();
 });
 
@@ -228,9 +233,6 @@ window.addEventListener('keydown', (event) => {
 });
 
 void loadLogs();
-window.setInterval(() => {
-  void loadLogs();
-}, refreshIntervalMs);
 `;
 
 export const renderApiLogsDashboard = () => {
@@ -593,8 +595,8 @@ export const renderApiLogsDashboard = () => {
           <p>Monitor every request, inspect sanitized headers and bodies, and spot slow or failing endpoints without leaving the browser.</p>
         </div>
         <aside class="status-card">
-          <span class="label">Refresh cadence</span>
-          <strong id="refresh-indicator">Every 8 seconds</strong>
+          <span class="label">Refresh mode</span>
+          <strong id="refresh-indicator">Manual refresh</strong>
           <span class="subtle" id="last-updated">Waiting for first load...</span>
         </aside>
       </section>
@@ -645,6 +647,11 @@ export const renderApiLogsDashboard = () => {
         <div class="field">
           <label>&nbsp;</label>
           <button class="primary" id="apply-filters" type="button">Apply filters</button>
+        </div>
+
+        <div class="field">
+          <label>&nbsp;</label>
+          <button id="refresh-logs" type="button">Refresh logs</button>
         </div>
 
         <div class="field">

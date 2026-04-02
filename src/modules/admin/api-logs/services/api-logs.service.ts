@@ -39,8 +39,18 @@ const buildWhere = (query: Record<string, unknown>): Prisma.ApiLogWhereInput => 
   const method = typeof query.method === 'string' ? query.method.trim().toUpperCase() : undefined;
   const url = typeof query.url === 'string' ? query.url.trim() : undefined;
   const status = parseStatusFilter(query.status);
+  const excludeAdmin = query.excludeAdmin === true || query.excludeAdmin === 'true';
 
   return {
+    ...(excludeAdmin
+      ? {
+          NOT: {
+            url: {
+              startsWith: '/admin/',
+            },
+          },
+        }
+      : {}),
     ...(method ? { method } : {}),
     ...(url
       ? {

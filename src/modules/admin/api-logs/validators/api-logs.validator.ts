@@ -16,6 +16,7 @@ export const listApiLogsSchema = z.object({
     method: methodSchema,
     status: statusSchema,
     url: z.string().trim().max(2048).optional(),
+    excludeAdmin: z.coerce.boolean().optional(),
   }),
 });
 
