@@ -1,5 +1,238 @@
 const escapeTemplateLiteral = (value: string) => value.replace(/`/g, '\\`');
 
+export const renderApiLogsDashboardScript = () => String.raw`const state = {
+  page: 1,
+  limit: 100,
+  method: '',
+  status: '',
+  url: '',
+  totalPages: 1,
+  logs: [],
+};
+
+const refreshIntervalMs = 8000;
+
+const tableBody = document.getElementById('logs-table-body');
+const metaSummary = document.getElementById('meta-summary');
+const pageLabel = document.getElementById('page-label');
+const prevPageButton = document.getElementById('prev-page');
+const nextPageButton = document.getElementById('next-page');
+const lastUpdated = document.getElementById('last-updated');
+const modal = document.getElementById('details-modal');
+const modalTitle = document.getElementById('modal-title');
+const modalSubtitle = document.getElementById('modal-subtitle');
+const headersContent = document.getElementById('headers-content');
+const bodyContent = document.getElementById('body-content');
+
+const methodClass = (method) => {
+  const normalized = String(method || '').toLowerCase();
+  if (['get', 'post', 'put', 'patch', 'delete'].includes(normalized)) {
+    return 'method-' + normalized;
+  }
+
+  return 'method-other';
+};
+
+const statusClass = (status) => {
+  if (status >= 200 && status < 300) {
+    return 'status-success';
+  }
+
+  if (status >= 400 && status < 500) {
+    return 'status-client';
+  }
+
+  if (status >= 500) {
+    return 'status-server';
+  }
+
+  return 'status-other';
+};
+
+const formatJson = (text) => {
+  if (!text) {
+    return 'null';
+  }
+
+  try {
+    return JSON.stringify(JSON.parse(text), null, 2);
+  } catch {
+    return text;
+  }
+};
+
+const formatDate = (value) => new Date(value).toLocaleString();
+
+const renderRows = (logs) => {
+  if (!logs.length) {
+    tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">No logs matched the current filters.</td></tr>';
+    return;
+  }
+
+  tableBody.innerHTML = '';
+
+  logs.forEach((log) => {
+    const row = document.createElement('tr');
+    if (log.responseTime > 1000) {
+      row.classList.add('slow');
+    }
+
+    row.innerHTML = [
+      '<td><span class="badge ' + methodClass(log.method) + '">' + log.method + '</span></td>',
+      '<td class="url-cell">' + log.url + '</td>',
+      '<td><span class="badge ' + statusClass(log.status) + '">' + log.status + '</span></td>',
+      '<td>' + log.responseTime + ' ms' + (log.responseTime > 1000 ? ' <span class="subtle">slow</span>' : '') + '</td>',
+      '<td>' + formatDate(log.createdAt) + '</td>',
+      '<td><button class="action-button" type="button" data-log-id="' + log.id + '">View Details</button></td>',
+    ].join('');
+
+    tableBody.appendChild(row);
+  });
+
+  tableBody.querySelectorAll('[data-log-id]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const logId = Number(button.getAttribute('data-log-id'));
+      const log = state.logs.find((entry) => entry.id === logId);
+      if (!log) {
+        return;
+      }
+
+      modalTitle.textContent = log.method + ' ' + log.url;
+      modalSubtitle.textContent = 'Status ' + log.status + ' • ' + log.responseTime + ' ms • ' + formatDate(log.createdAt);
+      headersContent.textContent = formatJson(log.headers);
+      bodyContent.textContent = formatJson(log.body);
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    });
+  });
+};
+
+const applyMeta = (meta) => {
+  state.totalPages = meta.totalPages || 1;
+  pageLabel.textContent = 'Page ' + meta.page + ' of ' + state.totalPages;
+  metaSummary.textContent = 'Showing ' + state.logs.length + ' logs of ' + meta.total + ' total';
+  prevPageButton.disabled = meta.page <= 1;
+  nextPageButton.disabled = meta.page >= state.totalPages;
+};
+
+const buildQuery = () => {
+  const params = new URLSearchParams({
+    page: String(state.page),
+    limit: String(state.limit),
+  });
+
+  if (state.method) {
+    params.set('method', state.method);
+  }
+
+  if (state.status) {
+    params.set('status', state.status);
+  }
+
+  if (state.url) {
+    params.set('url', state.url);
+  }
+
+  return params.toString();
+};
+
+const loadLogs = async () => {
+  tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading logs...</td></tr>';
+
+  try {
+    const response = await fetch('/admin/api-logs?' + buildQuery(), { headers: { Accept: 'application/json' } });
+    const payload = await response.json();
+
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.message || 'Failed to load logs');
+    }
+
+    state.logs = payload.data;
+    renderRows(payload.data);
+    applyMeta(payload.meta);
+    lastUpdated.textContent = 'Last updated ' + new Date().toLocaleTimeString();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to load logs.';
+    tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">' + message + '</td></tr>';
+    metaSummary.textContent = 'Unable to load logs.';
+    lastUpdated.textContent = 'Last refresh failed';
+  }
+};
+
+document.getElementById('apply-filters').addEventListener('click', () => {
+  state.page = 1;
+  state.method = document.getElementById('method-filter').value;
+  state.status = document.getElementById('status-filter').value;
+  state.url = document.getElementById('url-filter').value.trim();
+  state.limit = Number(document.getElementById('limit-filter').value);
+  void loadLogs();
+});
+
+document.getElementById('cleanup-logs').addEventListener('click', async () => {
+  const confirmed = window.confirm('Delete API logs older than 7 days?');
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    const response = await fetch('/admin/api-logs/cleanup?olderThanDays=7', { method: 'DELETE' });
+    const payload = await response.json();
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.message || 'Cleanup failed');
+    }
+
+    window.alert('Deleted ' + payload.data.deletedCount + ' old logs.');
+    state.page = 1;
+    void loadLogs();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Cleanup failed';
+    window.alert(message);
+  }
+});
+
+prevPageButton.addEventListener('click', () => {
+  if (state.page <= 1) {
+    return;
+  }
+
+  state.page -= 1;
+  void loadLogs();
+});
+
+nextPageButton.addEventListener('click', () => {
+  if (state.page >= state.totalPages) {
+    return;
+  }
+
+  state.page += 1;
+  void loadLogs();
+});
+
+document.getElementById('close-modal').addEventListener('click', () => {
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+});
+
+modal.addEventListener('click', (event) => {
+  if (event.target === modal) {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+});
+
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+});
+
+void loadLogs();
+window.setInterval(() => {
+  void loadLogs();
+}, refreshIntervalMs);
+`;
+
 export const renderApiLogsDashboard = () => {
   const html = String.raw`<!DOCTYPE html>
 <html lang="en">
@@ -474,238 +707,7 @@ export const renderApiLogsDashboard = () => {
         </div>
       </div>
     </div>
-
-    <script>
-      const state = {
-        page: 1,
-        limit: 100,
-        method: '',
-        status: '',
-        url: '',
-        totalPages: 1,
-        logs: [],
-      };
-
-      const refreshIntervalMs = 8000;
-
-      const tableBody = document.getElementById('logs-table-body');
-      const metaSummary = document.getElementById('meta-summary');
-      const pageLabel = document.getElementById('page-label');
-      const prevPageButton = document.getElementById('prev-page');
-      const nextPageButton = document.getElementById('next-page');
-      const lastUpdated = document.getElementById('last-updated');
-      const modal = document.getElementById('details-modal');
-      const modalTitle = document.getElementById('modal-title');
-      const modalSubtitle = document.getElementById('modal-subtitle');
-      const headersContent = document.getElementById('headers-content');
-      const bodyContent = document.getElementById('body-content');
-
-      const methodClass = (method) => {
-        const normalized = String(method || '').toLowerCase();
-        if (['get', 'post', 'put', 'patch', 'delete'].includes(normalized)) {
-          return 'method-' + normalized;
-        }
-
-        return 'method-other';
-      };
-
-      const statusClass = (status) => {
-        if (status >= 200 && status < 300) {
-          return 'status-success';
-        }
-
-        if (status >= 400 && status < 500) {
-          return 'status-client';
-        }
-
-        if (status >= 500) {
-          return 'status-server';
-        }
-
-        return 'status-other';
-      };
-
-      const formatJson = (text) => {
-        if (!text) {
-          return 'null';
-        }
-
-        try {
-          return JSON.stringify(JSON.parse(text), null, 2);
-        } catch {
-          return text;
-        }
-      };
-
-      const formatDate = (value) => new Date(value).toLocaleString();
-
-      const renderRows = (logs) => {
-        if (!logs.length) {
-          tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">No logs matched the current filters.</td></tr>';
-          return;
-        }
-
-        tableBody.innerHTML = '';
-
-        logs.forEach((log) => {
-          const row = document.createElement('tr');
-          if (log.responseTime > 1000) {
-            row.classList.add('slow');
-          }
-
-          row.innerHTML = [
-            '<td><span class="badge ' + methodClass(log.method) + '">' + log.method + '</span></td>',
-            '<td class="url-cell">' + log.url + '</td>',
-            '<td><span class="badge ' + statusClass(log.status) + '">' + log.status + '</span></td>',
-            '<td>' + log.responseTime + ' ms' + (log.responseTime > 1000 ? ' <span class="subtle">slow</span>' : '') + '</td>',
-            '<td>' + formatDate(log.createdAt) + '</td>',
-            '<td><button class="action-button" type="button" data-log-id="' + log.id + '">View Details</button></td>',
-          ].join('');
-
-          tableBody.appendChild(row);
-        });
-
-        tableBody.querySelectorAll('[data-log-id]').forEach((button) => {
-          button.addEventListener('click', () => {
-            const logId = Number(button.getAttribute('data-log-id'));
-            const log = state.logs.find((entry) => entry.id === logId);
-            if (!log) {
-              return;
-            }
-
-            modalTitle.textContent = log.method + ' ' + log.url;
-            modalSubtitle.textContent = 'Status ' + log.status + ' • ' + log.responseTime + ' ms • ' + formatDate(log.createdAt);
-            headersContent.textContent = formatJson(log.headers);
-            bodyContent.textContent = formatJson(log.body);
-            modal.classList.add('open');
-            modal.setAttribute('aria-hidden', 'false');
-          });
-        });
-      };
-
-      const applyMeta = (meta) => {
-        state.totalPages = meta.totalPages || 1;
-        pageLabel.textContent = 'Page ' + meta.page + ' of ' + state.totalPages;
-        metaSummary.textContent = 'Showing ' + state.logs.length + ' logs of ' + meta.total + ' total';
-        prevPageButton.disabled = meta.page <= 1;
-        nextPageButton.disabled = meta.page >= state.totalPages;
-      };
-
-      const buildQuery = () => {
-        const params = new URLSearchParams({
-          page: String(state.page),
-          limit: String(state.limit),
-        });
-
-        if (state.method) {
-          params.set('method', state.method);
-        }
-
-        if (state.status) {
-          params.set('status', state.status);
-        }
-
-        if (state.url) {
-          params.set('url', state.url);
-        }
-
-        return params.toString();
-      };
-
-      const loadLogs = async () => {
-        tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading logs...</td></tr>';
-
-        try {
-          const response = await fetch('/admin/api-logs?' + buildQuery(), { headers: { Accept: 'application/json' } });
-          const payload = await response.json();
-
-          if (!response.ok || !payload.success) {
-            throw new Error(payload.message || 'Failed to load logs');
-          }
-
-          state.logs = payload.data;
-          renderRows(payload.data);
-          applyMeta(payload.meta);
-          lastUpdated.textContent = 'Last updated ' + new Date().toLocaleTimeString();
-        } catch (error) {
-          tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">' + error.message + '</td></tr>';
-          metaSummary.textContent = 'Unable to load logs.';
-          lastUpdated.textContent = 'Last refresh failed';
-        }
-      };
-
-      document.getElementById('apply-filters').addEventListener('click', () => {
-        state.page = 1;
-        state.method = document.getElementById('method-filter').value;
-        state.status = document.getElementById('status-filter').value;
-        state.url = document.getElementById('url-filter').value.trim();
-        state.limit = Number(document.getElementById('limit-filter').value);
-        void loadLogs();
-      });
-
-      document.getElementById('cleanup-logs').addEventListener('click', async () => {
-        const confirmed = window.confirm('Delete API logs older than 7 days?');
-        if (!confirmed) {
-          return;
-        }
-
-        try {
-          const response = await fetch('/admin/api-logs/cleanup?olderThanDays=7', { method: 'DELETE' });
-          const payload = await response.json();
-          if (!response.ok || !payload.success) {
-            throw new Error(payload.message || 'Cleanup failed');
-          }
-
-          window.alert('Deleted ' + payload.data.deletedCount + ' old logs.');
-          state.page = 1;
-          void loadLogs();
-        } catch (error) {
-          window.alert(error.message);
-        }
-      });
-
-      prevPageButton.addEventListener('click', () => {
-        if (state.page <= 1) {
-          return;
-        }
-
-        state.page -= 1;
-        void loadLogs();
-      });
-
-      nextPageButton.addEventListener('click', () => {
-        if (state.page >= state.totalPages) {
-          return;
-        }
-
-        state.page += 1;
-        void loadLogs();
-      });
-
-      document.getElementById('close-modal').addEventListener('click', () => {
-        modal.classList.remove('open');
-        modal.setAttribute('aria-hidden', 'true');
-      });
-
-      modal.addEventListener('click', (event) => {
-        if (event.target === modal) {
-          modal.classList.remove('open');
-          modal.setAttribute('aria-hidden', 'true');
-        }
-      });
-
-      window.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-          modal.classList.remove('open');
-          modal.setAttribute('aria-hidden', 'true');
-        }
-      });
-
-      void loadLogs();
-      window.setInterval(() => {
-        void loadLogs();
-      }, refreshIntervalMs);
-    </script>
+    <script src="/admin/api-logs/view.js" defer></script>
   </body>
 </html>`;
 

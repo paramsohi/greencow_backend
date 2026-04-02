@@ -38,7 +38,7 @@ exports.requestPhoneOtpSchema = zod_1.z.object({
 exports.verifyPhoneOtpSchema = zod_1.z.object({
     body: zod_1.z.object({
         phone: phoneSchema,
-        otp: zod_1.z.string().trim().min(4).max(8),
+        otp: zod_1.z.string().trim().min(6, 'OTP must be at least 6 characters').max(6, 'OTP cannot exceed 6 characters'),
     }),
     params: zod_1.z.object({}),
     query: zod_1.z.object({}),

@@ -6,7 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.env = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const zod_1 = require("zod");
-dotenv_1.default.config();
+if (process.env.NODE_ENV !== 'production') {
+    dotenv_1.default.config();
+}
 const envSchema = zod_1.z.object({
     NODE_ENV: zod_1.z.enum(['development', 'test', 'production']).default('development'),
     PORT: zod_1.z.coerce.number().default(8080),

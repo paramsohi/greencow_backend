@@ -141,3 +141,19 @@ model RefreshToken {
   @@index([userId])
   @@map("refresh_tokens")
 }
+
+model ApiLog {
+  id           Int      @id @default(autoincrement())
+  method       String   @db.VarChar(10)
+  url          String   @db.Text
+  headers      String   @db.LongText
+  body         String?  @db.LongText
+  status       Int
+  responseTime Int      @map("response_time")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([method])
+  @@index([status])
+  @@map("api_logs")
+}

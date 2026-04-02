@@ -5,7 +5,7 @@ const api_error_1 = require("../../../common/errors/api-error");
 const crypto_1 = require("../../../common/utils/crypto");
 const tokens_1 = require("../../../common/utils/tokens");
 const auth_repository_1 = require("../repositories/auth.repository");
-const STATIC_OTP = '1111';
+const STATIC_OTP = '111111'; // For demo purposes only. In production, use a proper OTP generation and delivery mechanism.
 const normalizePhone = (phone) => phone.trim();
 const buildPhoneFallbackEmail = (phone) => {
     const safePhone = phone.replace(/\s+/g, '');
