@@ -148,6 +148,7 @@ model ApiLog {
   url          String   @db.Text
   headers      String   @db.LongText
   body         String?  @db.LongText
+  response     String?  @db.LongText
   status       Int
   responseTime Int      @map("response_time")
   createdAt    DateTime @default(now()) @map("created_at")

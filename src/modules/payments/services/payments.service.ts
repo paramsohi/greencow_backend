@@ -2,8 +2,13 @@ import { ApiError } from '../../../common/errors/api-error';
 import { parsePagination } from '../../../common/utils/pagination';
 import { paymentsRepository } from '../repositories/payments.repository';
 
+const toPaymentResponse = <TPayment extends { amount: unknown }>(payment: TPayment) => ({
+  ...payment,
+  amount: Number(payment.amount),
+});
+
 export class PaymentsService {
-  create(userId: number, body: {
+  async create(userId: number, body: {
     customerId: number;
     paymentDate: string;
     amount: number;
@@ -11,10 +16,12 @@ export class PaymentsService {
     reference?: string;
     notes?: string;
   }) {
-    return paymentsRepository.create(userId, {
+    const payment = await paymentsRepository.create(userId, {
       ...body,
       paymentDate: new Date(body.paymentDate),
     });
+
+    return toPaymentResponse(payment);
   }
 
   async list(userId: number, query: Record<string, unknown>) {
@@ -39,7 +46,7 @@ export class PaymentsService {
     ]);
 
     return {
-      items,
+      items: items.map(toPaymentResponse),
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
@@ -63,7 +70,7 @@ export class PaymentsService {
   }) {
     await this.owned(paymentId, authUserId);
 
-    return paymentsRepository.update(paymentId, {
+    const payment = await paymentsRepository.update(paymentId, {
       ...(body.customerId !== undefined ? { customerId: body.customerId } : {}),
       ...(body.paymentDate ? { paymentDate: new Date(body.paymentDate) } : {}),
       ...(body.amount !== undefined ? { amount: body.amount } : {}),
@@ -71,6 +78,8 @@ export class PaymentsService {
       ...(body.reference !== undefined ? { reference: body.reference } : {}),
       ...(body.notes !== undefined ? { notes: body.notes } : {}),
     });
+
+    return toPaymentResponse(payment);
   }
 
   async remove(paymentId: number, authUserId: number) {

@@ -4,12 +4,17 @@ exports.paymentsService = exports.PaymentsService = void 0;
 const api_error_1 = require("../../../common/errors/api-error");
 const pagination_1 = require("../../../common/utils/pagination");
 const payments_repository_1 = require("../repositories/payments.repository");
+const toPaymentResponse = (payment) => ({
+    ...payment,
+    amount: Number(payment.amount),
+});
 class PaymentsService {
-    create(userId, body) {
-        return payments_repository_1.paymentsRepository.create(userId, {
+    async create(userId, body) {
+        const payment = await payments_repository_1.paymentsRepository.create(userId, {
             ...body,
             paymentDate: new Date(body.paymentDate),
         });
+        return toPaymentResponse(payment);
     }
     async list(userId, query) {
         const { page, limit, skip, sortBy, sortOrder } = (0, pagination_1.parsePagination)({ query });
@@ -30,7 +35,7 @@ class PaymentsService {
             payments_repository_1.paymentsRepository.count(userId, where),
         ]);
         return {
-            items,
+            items: items.map(toPaymentResponse),
             meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
         };
     }
@@ -43,7 +48,7 @@ class PaymentsService {
     }
     async update(paymentId, authUserId, body) {
         await this.owned(paymentId, authUserId);
-        return payments_repository_1.paymentsRepository.update(paymentId, {
+        const payment = await payments_repository_1.paymentsRepository.update(paymentId, {
             ...(body.customerId !== undefined ? { customerId: body.customerId } : {}),
             ...(body.paymentDate ? { paymentDate: new Date(body.paymentDate) } : {}),
             ...(body.amount !== undefined ? { amount: body.amount } : {}),
@@ -51,6 +56,7 @@ class PaymentsService {
             ...(body.reference !== undefined ? { reference: body.reference } : {}),
             ...(body.notes !== undefined ? { notes: body.notes } : {}),
         });
+        return toPaymentResponse(payment);
     }
     async remove(paymentId, authUserId) {
         await this.owned(paymentId, authUserId);
