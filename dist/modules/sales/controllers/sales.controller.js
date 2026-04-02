@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteSale = exports.updateSale = exports.listSales = exports.createSale = void 0;
+exports.deleteSale = exports.updateSale = exports.listSalesByCustomer = exports.listSales = exports.createSale = void 0;
 const async_handler_1 = require("../../../common/middleware/async-handler");
 const sales_service_1 = require("../services/sales.service");
 exports.createSale = (0, async_handler_1.asyncHandler)(async (req, res) => {
@@ -9,6 +9,10 @@ exports.createSale = (0, async_handler_1.asyncHandler)(async (req, res) => {
 });
 exports.listSales = (0, async_handler_1.asyncHandler)(async (req, res) => {
     const result = await sales_service_1.salesService.list(Number(req.params.userId), req.query);
+    res.status(200).json({ success: true, message: 'Sales entries fetched', data: result.items, meta: result.meta });
+});
+exports.listSalesByCustomer = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const result = await sales_service_1.salesService.listByCustomer(Number(req.params.customerId), req.auth.userId, req.query);
     res.status(200).json({ success: true, message: 'Sales entries fetched', data: result.items, meta: result.meta });
 });
 exports.updateSale = (0, async_handler_1.asyncHandler)(async (req, res) => {

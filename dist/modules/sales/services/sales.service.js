@@ -3,12 +3,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.salesService = exports.SalesService = void 0;
 const api_error_1 = require("../../../common/errors/api-error");
 const pagination_1 = require("../../../common/utils/pagination");
+const customers_repository_1 = require("../../customers/repositories/customers.repository");
 const sales_repository_1 = require("../repositories/sales.repository");
 const toSaleResponse = (sale) => ({
     ...sale,
     quantityLiters: Number(sale.quantityLiters),
     ratePerLiter: Number(sale.ratePerLiter),
     totalAmount: Number(sale.totalAmount),
+    ...(sale && typeof sale === 'object' && 'paymentStatus' in sale
+        ? {
+            paymentStatus: ['paid', 'partial', 'pending'].includes(String(sale.paymentStatus))
+                ? String(sale.paymentStatus)
+                : 'pending',
+        }
+        : {}),
     ...(sale && typeof sale === 'object' && 'customer' in sale && sale.customer
         ? {
             customer: {
@@ -19,15 +27,9 @@ const toSaleResponse = (sale) => ({
         : {}),
 });
 class SalesService {
-    create(userId, body) {
-        return sales_repository_1.salesRepository.create(userId, {
-            ...body,
-            saleDate: new Date(body.saleDate),
-        });
-    }
-    async list(userId, query) {
-        const { page, limit, skip, sortBy, sortOrder } = (0, pagination_1.parsePagination)({ query });
-        const where = {
+    buildWhere(query, baseWhere = {}) {
+        return {
+            ...baseWhere,
             ...(query.customerId ? { customerId: Number(query.customerId) } : {}),
             ...(query.productType ? { productType: { contains: String(query.productType) } } : {}),
             ...(query.fromDate || query.toDate
@@ -39,9 +41,35 @@ class SalesService {
                 }
                 : {}),
         };
+    }
+    create(userId, body) {
+        return sales_repository_1.salesRepository.create(userId, {
+            ...body,
+            saleDate: new Date(body.saleDate),
+        }).then(toSaleResponse);
+    }
+    async list(userId, query) {
+        const { page, limit, skip, sortBy, sortOrder } = (0, pagination_1.parsePagination)({ query });
+        const where = this.buildWhere(query);
         const [items, total] = await Promise.all([
             sales_repository_1.salesRepository.list(userId, where, skip, limit, { [sortBy]: sortOrder }),
             sales_repository_1.salesRepository.count(userId, where),
+        ]);
+        return {
+            items: items.map(toSaleResponse),
+            meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+        };
+    }
+    async listByCustomer(customerId, authUserId, query) {
+        const customer = await customers_repository_1.customersRepository.findById(customerId);
+        if (!customer || customer.userId !== authUserId) {
+            throw new api_error_1.ApiError(404, 'Customer not found');
+        }
+        const { page, limit, skip, sortBy, sortOrder } = (0, pagination_1.parsePagination)({ query });
+        const where = this.buildWhere(query, { customerId });
+        const [items, total] = await Promise.all([
+            sales_repository_1.salesRepository.list(authUserId, where, skip, limit, { [sortBy]: sortOrder }),
+            sales_repository_1.salesRepository.count(authUserId, where),
         ]);
         return {
             items: items.map(toSaleResponse),
@@ -65,6 +93,7 @@ class SalesService {
             ...(body.productType ? { productType: body.productType } : {}),
             ...(body.quantityLiters !== undefined ? { quantityLiters: body.quantityLiters } : {}),
             ...(body.ratePerLiter !== undefined ? { ratePerLiter: body.ratePerLiter } : {}),
+            ...(body.paymentStatus !== undefined ? { paymentStatus: body.paymentStatus } : {}),
             ...(body.notes !== undefined ? { notes: body.notes } : {}),
             totalAmount: quantity * rate,
         });

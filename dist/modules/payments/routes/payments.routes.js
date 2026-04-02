@@ -9,6 +9,7 @@ const payments_validator_1 = require("../validators/payments.validator");
 exports.paymentRoutes = (0, express_1.Router)();
 exports.paymentRoutes.post('/users/:userId/payments', auth_1.authGuard, auth_1.ownershipGuard, (0, validate_1.validate)(payments_validator_1.createPaymentSchema), payments_controller_1.createPayment);
 exports.paymentRoutes.get('/users/:userId/payments', auth_1.authGuard, auth_1.ownershipGuard, (0, validate_1.validate)(payments_validator_1.listPaymentsSchema), payments_controller_1.listPayments);
+exports.paymentRoutes.get('/customers/:customerId/payments', auth_1.authGuard, (0, validate_1.validate)(payments_validator_1.customerPaymentListSchema), payments_controller_1.listPaymentsByCustomer);
 exports.paymentRoutes.patch('/payments/:paymentId', auth_1.authGuard, (0, validate_1.validate)(payments_validator_1.updatePaymentSchema), payments_controller_1.updatePayment);
 exports.paymentRoutes.delete('/payments/:paymentId', auth_1.authGuard, (0, validate_1.validate)(payments_validator_1.paymentIdSchema), payments_controller_1.deletePayment);
 //# sourceMappingURL=payments.routes.js.map

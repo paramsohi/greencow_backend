@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updatePaymentSchema = exports.paymentIdSchema = exports.listPaymentsSchema = exports.createPaymentSchema = void 0;
+exports.updatePaymentSchema = exports.paymentIdSchema = exports.customerPaymentListSchema = exports.listPaymentsSchema = exports.createPaymentSchema = void 0;
 const zod_1 = require("zod");
 const listQuery = zod_1.z.object({
     page: zod_1.z.coerce.number().int().positive().optional(),
@@ -28,6 +28,11 @@ exports.listPaymentsSchema = zod_1.z.object({
     body: zod_1.z.object({}),
     params: zod_1.z.object({ userId: zod_1.z.coerce.number().int().positive() }),
     query: listQuery,
+});
+exports.customerPaymentListSchema = zod_1.z.object({
+    body: zod_1.z.object({}),
+    params: zod_1.z.object({ customerId: zod_1.z.coerce.number().int().positive() }),
+    query: listQuery.omit({ customerId: true }),
 });
 exports.paymentIdSchema = zod_1.z.object({
     body: zod_1.z.object({}),

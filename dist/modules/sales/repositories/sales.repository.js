@@ -14,6 +14,7 @@ class SalesRepository {
                 quantityLiters: data.quantityLiters,
                 ratePerLiter: data.ratePerLiter,
                 totalAmount,
+                paymentStatus: data.paymentStatus ?? 'pending',
                 notes: data.notes,
             },
         });

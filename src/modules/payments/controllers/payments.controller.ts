@@ -12,6 +12,15 @@ export const listPayments = asyncHandler(async (req: Request, res: Response) => 
   res.status(200).json({ success: true, message: 'Payment records fetched', data: result.items, meta: result.meta });
 });
 
+export const listPaymentsByCustomer = asyncHandler(async (req: Request, res: Response) => {
+  const result = await paymentsService.listByCustomer(
+    Number(req.params.customerId),
+    req.auth!.userId,
+    req.query as Record<string, unknown>
+  );
+  res.status(200).json({ success: true, message: 'Payment records fetched', data: result.items, meta: result.meta });
+});
+
 export const updatePayment = asyncHandler(async (req: Request, res: Response) => {
   const data = await paymentsService.update(Number(req.params.paymentId), req.auth!.userId, req.body);
   res.status(200).json({ success: true, message: 'Payment record updated', data });

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.paymentsService = exports.PaymentsService = void 0;
 const api_error_1 = require("../../../common/errors/api-error");
 const pagination_1 = require("../../../common/utils/pagination");
+const customers_repository_1 = require("../../customers/repositories/customers.repository");
 const payments_repository_1 = require("../repositories/payments.repository");
 const toPaymentResponse = (payment) => ({
     ...payment,
@@ -17,16 +18,9 @@ const toPaymentResponse = (payment) => ({
         : {}),
 });
 class PaymentsService {
-    async create(userId, body) {
-        const payment = await payments_repository_1.paymentsRepository.create(userId, {
-            ...body,
-            paymentDate: new Date(body.paymentDate),
-        });
-        return toPaymentResponse(payment);
-    }
-    async list(userId, query) {
-        const { page, limit, skip, sortBy, sortOrder } = (0, pagination_1.parsePagination)({ query });
-        const where = {
+    buildWhere(query, baseWhere = {}) {
+        return {
+            ...baseWhere,
             ...(query.customerId ? { customerId: Number(query.customerId) } : {}),
             ...(query.paymentMethod ? { paymentMethod: { contains: String(query.paymentMethod) } } : {}),
             ...(query.fromDate || query.toDate
@@ -38,9 +32,36 @@ class PaymentsService {
                 }
                 : {}),
         };
+    }
+    async create(userId, body) {
+        const payment = await payments_repository_1.paymentsRepository.create(userId, {
+            ...body,
+            paymentDate: new Date(body.paymentDate),
+        });
+        return toPaymentResponse(payment);
+    }
+    async list(userId, query) {
+        const { page, limit, skip, sortBy, sortOrder } = (0, pagination_1.parsePagination)({ query });
+        const where = this.buildWhere(query);
         const [items, total] = await Promise.all([
             payments_repository_1.paymentsRepository.list(userId, where, skip, limit, { [sortBy]: sortOrder }),
             payments_repository_1.paymentsRepository.count(userId, where),
+        ]);
+        return {
+            items: items.map(toPaymentResponse),
+            meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+        };
+    }
+    async listByCustomer(customerId, authUserId, query) {
+        const customer = await customers_repository_1.customersRepository.findById(customerId);
+        if (!customer || customer.userId !== authUserId) {
+            throw new api_error_1.ApiError(404, 'Customer not found');
+        }
+        const { page, limit, skip, sortBy, sortOrder } = (0, pagination_1.parsePagination)({ query });
+        const where = this.buildWhere(query, { customerId });
+        const [items, total] = await Promise.all([
+            payments_repository_1.paymentsRepository.list(authUserId, where, skip, limit, { [sortBy]: sortOrder }),
+            payments_repository_1.paymentsRepository.count(authUserId, where),
         ]);
         return {
             items: items.map(toPaymentResponse),

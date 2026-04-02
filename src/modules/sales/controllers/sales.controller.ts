@@ -12,6 +12,15 @@ export const listSales = asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json({ success: true, message: 'Sales entries fetched', data: result.items, meta: result.meta });
 });
 
+export const listSalesByCustomer = asyncHandler(async (req: Request, res: Response) => {
+  const result = await salesService.listByCustomer(
+    Number(req.params.customerId),
+    req.auth!.userId,
+    req.query as Record<string, unknown>
+  );
+  res.status(200).json({ success: true, message: 'Sales entries fetched', data: result.items, meta: result.meta });
+});
+
 export const updateSale = asyncHandler(async (req: Request, res: Response) => {
   const data = await salesService.update(Number(req.params.saleId), req.auth!.userId, req.body);
   res.status(200).json({ success: true, message: 'Sale entry updated', data });

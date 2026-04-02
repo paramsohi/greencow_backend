@@ -18,6 +18,7 @@ export const createSaleSchema = z.object({
     productType: z.string().min(2).max(100),
     quantityLiters: z.coerce.number().positive(),
     ratePerLiter: z.coerce.number().positive(),
+    paymentStatus: z.enum(['paid', 'pending', 'partial']).optional(),
     notes: z.string().max(255).optional(),
   }),
   params: z.object({ userId: z.coerce.number().int().positive() }),
@@ -28,6 +29,12 @@ export const listSalesSchema = z.object({
   body: z.object({}),
   params: z.object({ userId: z.coerce.number().int().positive() }),
   query: listQuery,
+});
+
+export const customerSalesListSchema = z.object({
+  body: z.object({}),
+  params: z.object({ customerId: z.coerce.number().int().positive() }),
+  query: listQuery.omit({ customerId: true }),
 });
 
 export const saleIdSchema = z.object({
@@ -43,6 +50,7 @@ export const updateSaleSchema = z.object({
     productType: z.string().min(2).max(100).optional(),
     quantityLiters: z.coerce.number().positive().optional(),
     ratePerLiter: z.coerce.number().positive().optional(),
+    paymentStatus: z.enum(['paid', 'pending', 'partial']).optional(),
     notes: z.string().max(255).optional(),
   }),
   params: z.object({ saleId: z.coerce.number().int().positive() }),

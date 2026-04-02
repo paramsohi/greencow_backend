@@ -7,6 +7,7 @@ export class SalesRepository {
     productType: string;
     quantityLiters: number;
     ratePerLiter: number;
+    paymentStatus?: string;
     notes?: string;
   }) {
     const totalAmount = data.quantityLiters * data.ratePerLiter;
@@ -19,6 +20,7 @@ export class SalesRepository {
         quantityLiters: data.quantityLiters,
         ratePerLiter: data.ratePerLiter,
         totalAmount,
+        paymentStatus: data.paymentStatus ?? 'pending',
         notes: data.notes,
       },
     });

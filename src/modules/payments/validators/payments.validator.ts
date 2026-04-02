@@ -30,6 +30,12 @@ export const listPaymentsSchema = z.object({
   query: listQuery,
 });
 
+export const customerPaymentListSchema = z.object({
+  body: z.object({}),
+  params: z.object({ customerId: z.coerce.number().int().positive() }),
+  query: listQuery.omit({ customerId: true }),
+});
+
 export const paymentIdSchema = z.object({
   body: z.object({}),
   params: z.object({ paymentId: z.coerce.number().int().positive() }),
