@@ -1,0 +1,2 @@
+ALTER TABLE `api_logs`
+ADD COLUMN `response` LONGTEXT NULL AFTER `body`;

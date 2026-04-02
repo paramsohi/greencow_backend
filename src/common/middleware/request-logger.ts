@@ -85,7 +85,29 @@ const serializeForStorage = (value: unknown): string | null => {
   }
 };
 
-const persistRequestLog = async (req: Request, res: Response, startedAt: bigint) => {
+const captureResponsePayload = (res: Response) => {
+  let responseBody: unknown;
+
+  const originalJson = res.json.bind(res);
+  const originalSend = res.send.bind(res);
+
+  res.json = ((body: unknown) => {
+    responseBody = body;
+    return originalJson(body);
+  }) as Response['json'];
+
+  res.send = ((body?: unknown) => {
+    if (responseBody === undefined) {
+      responseBody = body;
+    }
+
+    return originalSend(body);
+  }) as Response['send'];
+
+  return () => responseBody;
+};
+
+const persistRequestLog = async (req: Request, res: Response, startedAt: bigint, responseBody: unknown) => {
   const responseTime = Number((process.hrtime.bigint() - startedAt) / BigInt(1_000_000));
 
   try {
@@ -95,6 +117,7 @@ const persistRequestLog = async (req: Request, res: Response, startedAt: bigint)
         url: req.originalUrl || req.url,
         headers: serializeForStorage(req.headers) ?? '{}',
         body: serializeForStorage(req.body),
+        response: serializeForStorage(responseBody),
         status: res.statusCode,
         responseTime,
       },
@@ -106,9 +129,10 @@ const persistRequestLog = async (req: Request, res: Response, startedAt: bigint)
 
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
   const startedAt = process.hrtime.bigint();
+  const getResponseBody = captureResponsePayload(res);
 
   res.once('finish', () => {
-    void persistRequestLog(req, res, startedAt);
+    void persistRequestLog(req, res, startedAt, getResponseBody());
   });
 
   next();

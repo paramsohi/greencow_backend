@@ -23,6 +23,7 @@ const modalTitle = document.getElementById('modal-title');
 const modalSubtitle = document.getElementById('modal-subtitle');
 const headersContent = document.getElementById('headers-content');
 const bodyContent = document.getElementById('body-content');
+const responseContent = document.getElementById('response-content');
 
 const methodClass = (method) => {
   const normalized = String(method || '').toLowerCase();
@@ -101,6 +102,7 @@ const renderRows = (logs) => {
       modalSubtitle.textContent = 'Status ' + log.status + ' • ' + log.responseTime + ' ms • ' + formatDate(log.createdAt);
       headersContent.textContent = formatJson(log.headers);
       bodyContent.textContent = formatJson(log.body);
+      responseContent.textContent = formatJson(log.response);
       modal.classList.add('open');
       modal.setAttribute('aria-hidden', 'false');
     });
@@ -528,7 +530,7 @@ export const renderApiLogsDashboard = () => {
 
       .modal-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 16px;
         margin-top: 18px;
       }
@@ -710,6 +712,10 @@ export const renderApiLogsDashboard = () => {
           <section class="json-card">
             <h3>Body</h3>
             <pre id="body-content">null</pre>
+          </section>
+          <section class="json-card">
+            <h3>Response</h3>
+            <pre id="response-content">null</pre>
           </section>
         </div>
       </div>
