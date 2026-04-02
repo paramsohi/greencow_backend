@@ -23,4 +23,18 @@ describe('App health', () => {
     expect(response.status).not.toBe(404);
     expect(response.body.success).toBe(false);
   });
+
+  it('should serve the API logs dashboard HTML view', async () => {
+    const response = await request(app).get('/admin/api-logs/view');
+
+    expect(response.status).toBe(200);
+    expect(response.type).toContain('html');
+    expect(response.text).toContain('API Request Ledger');
+  });
+
+  it('should expose the API logs endpoint', async () => {
+    const response = await request(app).get('/admin/api-logs');
+
+    expect(response.status).not.toBe(404);
+  });
 });
