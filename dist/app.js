@@ -38,7 +38,18 @@ exports.app.use((0, express_session_1.default)({
     },
 }));
 exports.app.use((0, pino_http_1.default)({ logger: logger_1.logger }));
-exports.app.use((0, helmet_1.default)());
+exports.app.use((0, helmet_1.default)({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
+            fontSrc: ["'self'"],
+            imgSrc: ["'self'", 'data:'],
+            connectSrc: ["'self'"],
+        },
+    },
+}));
 exports.app.use((0, cors_1.default)({
     origin: env_1.env.CORS_ORIGIN,
     credentials: true,
