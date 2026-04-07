@@ -26,6 +26,32 @@ Production-ready Node.js + TypeScript + Express + Prisma + MySQL backend for dai
 - Zod
 - Pino
 - Jest + Supertest
+- EJS (for Admin UI)
+- Bootstrap 5 (for Admin UI)
+- Express-Session (for Admin UI)
+
+## 🎯 Admin Panel
+
+Complete admin dashboard for system management and monitoring:
+
+**Features:**
+- 📊 Real-time dashboard with system statistics
+- 🔐 Session-based login/logout
+- 📋 API logs viewer with pagination
+- 📱 Responsive Bootstrap UI
+- 🛡️ Role-based access control
+
+**Quick Start:**
+```bash
+npm run db:seed          # Create admin user (admin@dairy.local / Admin@123)
+npm start                # Start server
+# Open: http://localhost:4000/admin/login
+```
+
+**Documentation:**
+- [ADMIN_UI_QUICKSTART.md](./ADMIN_UI_QUICKSTART.md) - Get started in 3 minutes
+- [ADMIN_PANEL_COMPLETE.md](./ADMIN_PANEL_COMPLETE.md) - Full technical guide
+- [SETUP_COMPLETE.md](./SETUP_COMPLETE.md) - Complete setup summary
 
 ## Project Structure
 

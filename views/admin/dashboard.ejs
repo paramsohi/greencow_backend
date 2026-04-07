@@ -1,0 +1,95 @@
+<%
+  const dashboardContent = `
+    <div>
+      <h1 class="page-title">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </h1>
+
+      <!-- Stats Grid -->
+      <div class="row">
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="stat-card">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value">${stats.totalUsers}</div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="stat-card">
+            <div class="stat-label">Active Users</div>
+            <div class="stat-value">${stats.activeUsers}</div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="stat-card">
+            <div class="stat-label">Total Customers</div>
+            <div class="stat-value">${stats.totalCustomers}</div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="stat-card">
+            <div class="stat-label">Total Sales</div>
+            <div class="stat-value">${stats.totalSales}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue and Expenses Row -->
+      <div class="row">
+        <div class="col-md-6 mb-4">
+          <div class="stat-card">
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-value" style="color: #157f3b;">
+              ₹${Number(stats.totalRevenue).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+          <div class="stat-card">
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value" style="color: #dc3545;">
+              ₹${Number(stats.totalExpenses).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Net Profit -->
+      <div class="row">
+        <div class="col-md-12 mb-4">
+          <div class="stat-card" style="border-left-color: #ffc107;">
+            <div class="stat-label">Net Profit</div>
+            <div class="stat-value" style="color: ${stats.netProfit >= 0 ? '#157f3b' : '#dc3545'};">
+              ₹${Number(stats.netProfit).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+              ${stats.netProfit >= 0 ? '<i class="bi bi-arrow-up-right" style="font-size: 1.5rem;"></i>' : '<i class="bi bi-arrow-down-left" style="font-size: 1.5rem;"></i>'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="row mt-5">
+        <div class="col-md-12">
+          <h3 style="margin-bottom: 20px; color: #163529;">Quick Links</h3>
+          <div class="row">
+            <div class="col-md-6">
+              <a href="/admin/logs" class="btn btn-primary w-100">
+                <i class="bi bi-file-text"></i> View System Logs
+              </a>
+            </div>
+            <div class="col-md-6">
+              <a href="/admin/logout" class="btn btn-outline-secondary w-100">
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+%>
+
+<%- include('./layout', { title: 'Dashboard', adminEmail: adminEmail, body: dashboardContent }) %>

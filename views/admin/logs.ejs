@@ -1,0 +1,106 @@
+<%
+  const logsContent = `
+    <div>
+      <h1 class="page-title">
+        <i class="bi bi-file-text"></i> System Logs
+      </h1>
+
+      <!-- Logs Table -->
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Method</th>
+              <th>URL</th>
+              <th>Status</th>
+              <th>Response Time (ms)</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${logs && logs.length > 0 ? logs.map((log, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>
+                  ${log.method === 'GET' ? `<span class="badge" style="background-color: rgba(0, 123, 255, 0.1); color: #007bff;">${log.method}</span>` : ''}
+                  ${log.method === 'POST' ? `<span class="badge" style="background-color: rgba(40, 167, 69, 0.1); color: #28a745;">${log.method}</span>` : ''}
+                  ${log.method === 'PUT' || log.method === 'PATCH' ? `<span class="badge" style="background-color: rgba(255, 193, 7, 0.1); color: #ffc107;">${log.method}</span>` : ''}
+                  ${log.method === 'DELETE' ? `<span class="badge" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545;">${log.method}</span>` : ''}
+                </td>
+                <td>
+                  <code style="font-size: 0.85rem; color: #6c757d;">
+                    ${log.url.substring(0, 50)}${log.url.length > 50 ? '...' : ''}
+                  </code>
+                </td>
+                <td>
+                  ${log.status >= 200 && log.status < 300 ? `<span class="badge badge-success">${log.status}</span>` : ''}
+                  ${log.status >= 400 && log.status < 500 ? `<span class="badge" style="background-color: rgba(255, 193, 7, 0.1); color: #ffc107;">${log.status}</span>` : ''}
+                  ${log.status >= 500 ? `<span class="badge badge-error">${log.status}</span>` : log.status < 400 && log.status < 200 ? `<span class="badge" style="background-color: rgba(108, 117, 125, 0.1); color: #6c757d;">${log.status}</span>` : ''}
+                </td>
+                <td>
+                  <code style="font-size: 0.85rem;">
+                    ${log.responseTime}
+                  </code>
+                </td>
+                <td>
+                  <small class="text-muted">
+                    ${new Date(log.createdAt).toLocaleString('en-IN')}
+                  </small>
+                </td>
+              </tr>
+            `).join('') : '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox" style="font-size: 2rem; margin-bottom: 10px;"></i><p class="mt-2">No logs found</p></td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      ${meta && meta.pages > 1 ? `
+        <nav class="mt-4">
+          <ul class="pagination justify-content-center">
+            ${currentPage > 1 ? `
+              <li class="page-item">
+                <a class="page-link" href="/admin/logs?page=1&limit=20">First</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="/admin/logs?page=${currentPage - 1}&limit=20">Previous</a>
+              </li>
+            ` : ''}
+
+            ${Array.from({length: Math.min(meta.pages, 5)}, (_, i) => i + 1).map(i => `
+              <li class="page-item ${currentPage === i ? 'active' : ''}">
+                <a class="page-link" href="/admin/logs?page=${i}&limit=20">
+                  ${i}
+                </a>
+              </li>
+            `).join('')}
+
+            ${currentPage < meta.pages ? `
+              <li class="page-item">
+                <a class="page-link" href="/admin/logs?page=${currentPage + 1}&limit=20">Next</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="/admin/logs?page=${meta.pages}&limit=20">Last</a>
+              </li>
+            ` : ''}
+          </ul>
+        </nav>
+
+        <div class="text-center text-muted mt-3">
+          <small>
+            Page ${currentPage} of ${meta.pages} | Total Logs: ${meta.total}
+          </small>
+        </div>
+      ` : ''}
+
+      <!-- Refresh Button -->
+      <div class="text-center mt-4">
+        <button class="btn btn-outline-primary" onclick="location.reload()">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+      </div>
+    </div>
+  `;
+%>
+
+<%- include('./layout', { title: 'Logs', adminEmail: adminEmail, body: logsContent }) %>

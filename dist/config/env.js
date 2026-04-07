@@ -17,6 +17,7 @@ const envSchema = zod_1.z.object({
     JWT_REFRESH_SECRET: zod_1.z.string().min(16),
     JWT_ACCESS_EXPIRES_IN: zod_1.z.string().default('15m'),
     JWT_REFRESH_EXPIRES_IN: zod_1.z.string().default('7d'),
+    SESSION_SECRET: zod_1.z.string().min(8).default('dev-session-secret'),
     BCRYPT_SALT_ROUNDS: zod_1.z.coerce.number().min(8).max(15).default(10),
     RATE_LIMIT_WINDOW_MS: zod_1.z.coerce.number().default(900000),
     RATE_LIMIT_MAX: zod_1.z.coerce.number().default(200),

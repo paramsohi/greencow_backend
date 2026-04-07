@@ -8,6 +8,28 @@ const prisma = new PrismaClient();
 
 async function main() {
   const passwordHash = await bcrypt.hash('Password@123', 10);
+  const adminPasswordHash = await bcrypt.hash('Admin@123', 10);
+
+  // Create admin user
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@dairy.local' },
+    update: {},
+    create: {
+      email: 'admin@dairy.local',
+      passwordHash: adminPasswordHash,
+      role: 'ADMIN',
+      profile: {
+        create: {
+          fullName: 'Admin User',
+          phone: '+1000000099',
+          businessName: 'Dairy Management System',
+          businessAddress: 'Admin Panel',
+        },
+      },
+    },
+  });
+
+  console.log('✓ Admin user created:', admin.email);
 
   const owner = await prisma.user.upsert({
     where: { email: 'owner@dairy.local' },
