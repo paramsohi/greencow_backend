@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc && cp -r src/views dist/views",
+"build": "tsc && cp -r views dist/views && cp -r public dist/public",
     "start": "prisma migrate deploy && node dist/server.js",
     "start:local": "cp -n .env.example .env && docker compose up -d && npm run db:deploy && npm run db:seed && npm run dev",
     "test": "jest --runInBand",
