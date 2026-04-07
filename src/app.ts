@@ -44,14 +44,34 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        fontSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:'],
-        connectSrc: ["'self'"],
+
+        scriptSrc: [
+          "'self'",
+          "https://cdn.jsdelivr.net"
+        ],
+
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://cdn.jsdelivr.net"
+        ],
+
+        fontSrc: [
+          "'self'",
+          "https://cdn.jsdelivr.net"
+        ],
+
+        imgSrc: [
+          "'self'",
+          "data:"
+        ],
+
+        connectSrc: [
+          "'self'"
+        ]
       },
     },
-  }),
+  })
 );
 app.use(
   cors({
