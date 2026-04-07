@@ -1,6 +1,7 @@
 import { prisma } from '../../../../config/prisma';
 import { comparePassword } from '../../../../common/utils/crypto';
 import { apiLogsService } from '../../api-logs/services/api-logs.service';
+import { UserRole } from '@prisma/client';
 
 export class AdminUiService {
   /**
@@ -10,7 +11,7 @@ export class AdminUiService {
     const user = await prisma.user.findFirst({
       where: {
         email,
-        role: 'ADMIN',
+        role: UserRole.ADMIN,
         deletedAt: null,
       },
       select: {
