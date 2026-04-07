@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-"build": "tsc && cp -r views dist/views && cp -r public dist/public",
+    "build": "tsc && cp -r views dist/views && ([ -d public ] && cp -r public dist/public || true)",
     "start": "prisma migrate deploy && node dist/server.js",
     "start:local": "cp -n .env.example .env && docker compose up -d && npm run db:deploy && npm run db:seed && npm run dev",
     "test": "jest --runInBand",
@@ -29,6 +29,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
+    "ejs": "^5.0.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.1",
     "express-session": "^1.19.0",

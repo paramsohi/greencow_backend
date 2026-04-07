@@ -87,3 +87,18 @@ export const getLogs = asyncHandler(async (req: Request, res: Response) => {
     currentPage: page,
   });
 });
+
+export const getUsers = asyncHandler(async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 20;
+
+  const result = await adminUiService.getUsers(page, limit);
+
+  res.render('admin/users', {
+    title: 'Manage Users',
+    users: result.items,
+    meta: result.meta,
+    adminEmail: req.session?.adminEmail,
+    currentPage: page,
+  });
+});

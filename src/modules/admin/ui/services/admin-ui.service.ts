@@ -113,6 +113,52 @@ export class AdminUiService {
       return { items: [], meta: { total: 0, page, limit, pages: 0 } };
     }
   }
+
+  /**
+   * Get all users with pagination
+   */
+  async getUsers(page: number = 1, limit: number = 20) {
+    try {
+      const skip = (page - 1) * limit;
+      
+      const [users, total] = await Promise.all([
+        prisma.user.findMany({
+          where: { deletedAt: null },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            isActive: true,
+            createdAt: true,
+            profile: {
+              select: {
+                fullName: true,
+                phone: true,
+                businessName: true,
+              },
+            },
+          },
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.user.count({ where: { deletedAt: null } }),
+      ]);
+
+      return {
+        items: users,
+        meta: {
+          total,
+          page,
+          limit,
+          pages: Math.ceil(total / limit),
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return { items: [], meta: { total: 0, page, limit, pages: 0 } };
+    }
+  }
 }
 
 export const adminUiService = new AdminUiService();

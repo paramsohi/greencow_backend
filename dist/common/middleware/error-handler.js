@@ -13,6 +13,7 @@ const notFoundHandler = (req, res) => {
 };
 exports.notFoundHandler = notFoundHandler;
 const errorHandler = (err, _req, res, _next) => {
+    console.error("🔥 REAL ERROR:", err); // 👈 ADD THIS
     if (err instanceof api_error_1.ApiError) {
         return res.status(err.statusCode).json({
             success: false,
@@ -34,10 +35,12 @@ const errorHandler = (err, _req, res, _next) => {
             message: 'Database is unavailable. Ensure MySQL is running and try again.',
         });
     }
+    // 👇 IMPORTANT CHANGE
     logger_1.logger.error({ err }, 'Unhandled server error');
     return res.status(500).json({
         success: false,
-        message: 'Internal server error',
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : undefined, // 👈 add this
     });
 };
 exports.errorHandler = errorHandler;

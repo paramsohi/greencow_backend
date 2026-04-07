@@ -6,6 +6,7 @@ import {
   getLogout,
   getDashboard,
   getLogs,
+  getUsers,
 } from '../controllers/admin-ui.controller';
 
 export const adminUiRoutes = Router();
@@ -17,4 +18,5 @@ adminUiRoutes.post('/login', adminAlreadyLoggedIn, postLogin);
 // Protected routes
 adminUiRoutes.get('/logout', adminSessionGuard, getLogout);
 adminUiRoutes.get('/dashboard', adminSessionGuard, getDashboard);
+adminUiRoutes.get('/users', adminSessionGuard, getUsers);
 adminUiRoutes.get('/logs', adminSessionGuard, getLogs);

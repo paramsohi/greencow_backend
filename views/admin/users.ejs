@@ -1,0 +1,103 @@
+<%
+  const usersContent = `
+    <div>
+      <h1 class="page-title">
+        <i class="bi bi-people"></i> Manage Users
+      </h1>
+
+      <!-- Users Table -->
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Email</th>
+              <th>Full Name</th>
+              <th>Business</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users && users.length > 0 ? users.map((user, index) => `
+              <tr>
+                <td>${(currentPage - 1) * meta.limit + index + 1}</td>
+                <td>
+                  <strong>${user.email}</strong>
+                </td>
+                <td>
+                  ${user.profile?.fullName || 'N/A'}
+                </td>
+                <td>
+                  ${user.profile?.businessName || 'N/A'}
+                </td>
+                <td>
+                  ${user.role === 'ADMIN' ? `<span class="badge" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545;">ADMIN</span>` : ''}
+                  ${user.role === 'OWNER' ? `<span class="badge" style="background-color: rgba(40, 167, 69, 0.1); color: #28a745;">OWNER</span>` : ''}
+                  ${user.role === 'STAFF' ? `<span class="badge" style="background-color: rgba(0, 123, 255, 0.1); color: #007bff;">STAFF</span>` : ''}
+                </td>
+                <td>
+                  ${user.isActive ? `<span class="badge" style="background-color: rgba(40, 167, 69, 0.1); color: #28a745;">Active</span>` : `<span class="badge" style="background-color: rgba(108, 117, 125, 0.1); color: #6c757d;">Inactive</span>`}
+                </td>
+                <td>
+                  <small class="text-muted">
+                    ${new Date(user.createdAt).toLocaleDateString('en-IN')}
+                  </small>
+                </td>
+              </tr>
+            `).join('') : '<tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox" style="font-size: 2rem; margin-bottom: 10px;"></i><p class="mt-2">No users found</p></td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      ${meta && meta.pages > 1 ? `
+        <nav class="mt-4">
+          <ul class="pagination justify-content-center">
+            ${currentPage > 1 ? `
+              <li class="page-item">
+                <a class="page-link" href="/admin/users?page=1&limit=20">First</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="/admin/users?page=${currentPage - 1}&limit=20">Previous</a>
+              </li>
+            ` : ''}
+
+            ${Array.from({length: Math.min(meta.pages, 5)}, (_, i) => i + 1).map(i => `
+              <li class="page-item ${currentPage === i ? 'active' : ''}">
+                <a class="page-link" href="/admin/users?page=${i}&limit=20">
+                  ${i}
+                </a>
+              </li>
+            `).join('')}
+
+            ${currentPage < meta.pages ? `
+              <li class="page-item">
+                <a class="page-link" href="/admin/users?page=${currentPage + 1}&limit=20">Next</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="/admin/users?page=${meta.pages}&limit=20">Last</a>
+              </li>
+            ` : ''}
+          </ul>
+        </nav>
+
+        <div class="text-center text-muted mt-3">
+          <small>
+            Page ${currentPage} of ${meta.pages} | Total Users: ${meta.total}
+          </small>
+        </div>
+      ` : ''}
+
+      <!-- Refresh Button -->
+      <div class="text-center mt-4">
+        <button class="btn btn-outline-primary" onclick="location.reload()">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+      </div>
+    </div>
+  `;
+%>
+
+<%- include('./layout', { title: 'Manage Users', adminEmail: adminEmail, body: usersContent }) %>
