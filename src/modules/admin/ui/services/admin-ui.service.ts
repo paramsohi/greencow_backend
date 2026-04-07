@@ -1,6 +1,6 @@
 import { prisma } from '../../../../config/prisma';
 import { comparePassword } from '../../../../common/utils/crypto';
-import axios from 'axios';
+import { apiLogsService } from '../../api-logs/services/api-logs.service';
 
 export class AdminUiService {
   /**
@@ -84,33 +84,29 @@ export class AdminUiService {
    */
   async getAdminLogs(page: number = 1, limit: number = 20) {
     try {
-      // Fetch from the internal API logs endpoint
-      const skip = (page - 1) * limit;
-      const response = await axios.get(`http://localhost:3000/admin/api-logs`, {
-        params: { page, limit },
-        timeout: 5000,
+      // Call the API logs service directly
+      const result = await apiLogsService.list({
+        page,
+        limit,
+        excludeAdmin: false, // Include admin logs
       });
 
-      if (response.data?.data) {
-        return {
-          items: response.data.data.map((log: any) => ({
-            id: log.id,
-            method: log.method,
-            url: log.url,
-            status: log.status,
-            responseTime: log.responseTime,
-            createdAt: new Date(log.createdAt),
-          })),
-          meta: response.data.meta || {
-            total: response.data.data.length,
-            page,
-            limit,
-            pages: 1,
-          },
-        };
-      }
-
-      return { items: [], meta: { total: 0, page, limit, pages: 0 } };
+      return {
+        items: result.items.map((log: any) => ({
+          id: log.id,
+          method: log.method,
+          url: log.url,
+          status: log.status,
+          responseTime: log.responseTime,
+          createdAt: new Date(log.createdAt),
+        })),
+        meta: {
+          total: result.meta.total,
+          page: result.meta.page,
+          limit: result.meta.limit,
+          pages: result.meta.totalPages,
+        },
+      };
     } catch (error) {
       console.error('Error fetching admin logs:', error);
       return { items: [], meta: { total: 0, page, limit, pages: 0 } };
